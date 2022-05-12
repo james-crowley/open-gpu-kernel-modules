@@ -31,7 +31,7 @@ commands:
   install-kernel-module:
     description: "Installs Kernel Module"
     parameters:
-      build-args:
+      install-args:
         type: string
         default: "-j`nproc`"
     steps:
@@ -44,7 +44,7 @@ commands:
       - run: ls -lah kernel-open/
       - run:
           name: Install Kernel Module
-          command: make modules_install << parameters.build-args >>
+          command: make modules_install << parameters.install-args >>
 
 
 executors:
@@ -75,8 +75,8 @@ jobs:
         type: executor
     executor: << parameters.architecture >>
     steps:
-      - build-kernel-module:
-          build-args: "-j`nproc`"
+      - install-kernel-module:
+          install-args: "-j`nproc`"
 
 workflows:
   multi-arch-build:
