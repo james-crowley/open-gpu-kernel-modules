@@ -44,7 +44,7 @@ commands:
       - run: ls -lah kernel-open/
       - run:
           name: Install Kernel Module
-          command: make modules_install << parameters.install-args >>
+          command: sudo make modules_install << parameters.install-args >>
 
 
 executors:
