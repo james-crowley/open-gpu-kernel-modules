@@ -18,10 +18,15 @@ commands:
       - run:
           name: Compile Kernel Module
           command: make modules << parameters.build-args >> NV_VERBOSE=<< parameters.NV_VERBOSE >> DEBUG=<< parameters.DEBUG >>
+      - run:
+          name: "Move Compiled Files to Temp Directory"
+          command: |
+            mkdir -p /tmp/kernel-open
+            cp -r kernel-open/* /tmp/kernel-open/
       - persist_to_workspace:
-          root: /home/circleci/project
+          root: /tmp
           paths:
-            - /*
+            - kernel-open/*
 
   install-kernel-module:
     description: "Installs Kernel Module"
@@ -30,11 +35,15 @@ commands:
         type: string
         default: "-j`nproc`"
     steps:
+      - checkout
       - attach_workspace:
-          at: /home/circleci/project
-      - run: ls -lah /home/circleci/project/
+          at: /tmp
       - run:
-          name: Compile Kernel Module
+          name: "Copy over Compiled Files from Temp Directory"
+          command: cp -r /tmp/kernel-open/* kernel-open/
+      - run: ls -lah kernel-open/
+      - run:
+          name: Install Kernel Module
           command: make modules_install << parameters.build-args >>
 
 
@@ -82,3 +91,5 @@ workflows:
           matrix:
             parameters:
               architecture: ["arm64", "amd64"]
+          requires:
+            - "Building << matrix.architecture >> Kernel Module"
