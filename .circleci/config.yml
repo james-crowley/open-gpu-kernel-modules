@@ -18,8 +18,24 @@ commands:
       - run:
           name: Compile Kernel Module
           command: make modules << parameters.build-args >> NV_VERBOSE=<< parameters.NV_VERBOSE >> DEBUG=<< parameters.DEBUG >>
-      - store_artifacts:
-          path: test-results
+      - persist_to_workspace:
+          root: /home/circleci/project
+          paths:
+            - *
+
+  install-kernel-module:
+    description: "Installs Kernel Module"
+    parameters:
+      build-args:
+        type: string
+        default: "-j`nproc`"
+    steps:
+      - attach_workspace:
+          at: /home/circleci/project
+      - run: ls -lah /home/circleci/project/
+      - run:
+          name: Compile Kernel Module
+          command: make modules_install << parameters.build-args >>
 
 
 executors:
@@ -44,11 +60,25 @@ jobs:
       - build-kernel-module:
           build-args: "-j`nproc`"
 
+  install:
+    parameters:
+      architecture:
+        type: executor
+    executor: << parameters.architecture >>
+    steps:
+      - build-kernel-module:
+          build-args: "-j`nproc`"
+
 workflows:
   multi-arch-build:
     jobs:
       - build:
           name: "Building << matrix.architecture >> Kernel Module"
+          matrix:
+            parameters:
+              architecture: ["arm64", "amd64"]
+      - install:
+          name: "Installing << matrix.architecture >> Kernel Module"
           matrix:
             parameters:
               architecture: ["arm64", "amd64"]
